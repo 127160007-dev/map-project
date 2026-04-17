@@ -6,7 +6,7 @@
   <script>
     async function openMap() {
 
-      // Get blood group from URL
+      // ===== GET BLOOD FROM URL =====
       const params = new URLSearchParams(window.location.search);
       let blood = params.get("blood");
 
@@ -17,37 +17,45 @@
 
       try {
 
-        // FIX: decode URL (important for O+, A+, etc.)
+        // ===== DECODE BLOOD =====
         blood = decodeURIComponent(blood);
+        console.log("Blood received:", blood);
 
+        // ===== CALL GOOGLE SCRIPT =====
         const url =
           "https://script.google.com/macros/s/AKfycbwuG13bIWiqAxhxoT1DRfH1dYAi8JPTfdKiAPxqoY-0dTqOQnB6qum7dAnDf2MTQV6s-Q/exec?blood=" +
           blood;
 
         console.log("Calling:", url);
 
-        // FIX: use text() instead of json()
         const response = await fetch(url, { redirect: "follow" });
         const text = await response.text();
 
         console.log("RAW RESPONSE:", text);
 
+        // ===== SAFE JSON PARSE =====
         const data = JSON.parse(text);
 
-        const lat = data.latitude;
-        const lon = data.longitude;
+        // ===== EXTRACT COORDINATES =====
+        const lat = Number(data.latitude);
+        const lon = Number(data.longitude);
 
-        if (lat && lon) {
+        console.log("Lat:", lat, "Lon:", lon);
+
+        // ===== VALIDATION =====
+        if (!isNaN(lat) && !isNaN(lon)) {
 
           // Redirect to Google Maps
           window.location.href =
             "https://www.google.com/maps?q=" + lat + "," + lon;
 
         } else {
-          document.body.innerHTML = "<h3>No location found</h3>";
+          document.body.innerHTML =
+            "<h3>No location found</h3><pre>" + text + "</pre>";
         }
 
       } catch (error) {
+
         console.log("ERROR:", error);
 
         document.body.innerHTML =
