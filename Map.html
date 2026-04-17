@@ -10,7 +10,6 @@
   <script>
     async function openMap() {
 
-      // ===== GET BLOOD FROM URL =====
       const params = new URLSearchParams(window.location.search);
       let blood = params.get("blood");
 
@@ -20,37 +19,29 @@
       }
 
       try {
-        // ✅ CLEAN INPUT
         blood = blood.trim().toUpperCase();
 
-        // ✅ GOOGLE SCRIPT URL
         const url =
           "https://script.google.com/macros/s/AKfycbwuG13bIWiqAxhxoT1DRfH1dYAi8JPTfdKiAPxqoY-0dTqOQnB6qum7dAnDf2MTQV6s-Q/exec?blood=" +
           encodeURIComponent(blood);
 
-        console.log("Calling:", url);
-
-        // ✅ FETCH DATA
         const response = await fetch(url);
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch data");
-        }
-
         const data = await response.json();
-
-        console.log("Response:", data);
 
         const lat = Number(data.latitude);
         const lon = Number(data.longitude);
 
-        // ===== SUCCESS =====
         if (!isNaN(lat) && !isNaN(lon)) {
 
-          // ✅ REDIRECT (STABLE LINK)
-          window.location.href =
-            "https://www.google.com/maps/search/?api=1&query=" +
-            lat + "," + lon;
+          // ✅ SHOW BUTTON INSTEAD OF REDIRECT
+          document.body.innerHTML = `
+            <h2>Location Found ✅</h2>
+            <p>Blood Group: ${data.blood}</p>
+            <button onclick="openMaps(${lat}, ${lon})"
+              style="padding:10px;font-size:16px;">
+              Open in Google Maps
+            </button>
+          `;
 
         } else {
           document.body.innerHTML =
@@ -60,17 +51,18 @@
         }
 
       } catch (error) {
-
-        console.log("ERROR:", error);
-
         document.body.innerHTML =
-          "<h3>Error fetching location</h3><pre>" +
-          error +
-          "</pre>";
+          "<h3>Error</h3><pre>" + error + "</pre>";
       }
     }
 
-    // RUN ON LOAD
+    function openMaps(lat, lon) {
+      window.open(
+        "https://www.google.com/maps/search/?api=1&query=" + lat + "," + lon,
+        "_blank"
+      );
+    }
+
     openMap();
   </script>
 
