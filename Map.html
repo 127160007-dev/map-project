@@ -2,6 +2,10 @@
 <html>
 <head>
   <title>Smart Map</title>
+</head>
+
+<body>
+  <h2>Finding nearest hospital...</h2>
 
   <script>
     async function openMap() {
@@ -16,46 +20,43 @@
       }
 
       try {
-
-        // ✅ ALWAYS NORMALIZE INPUT
+        // ✅ CLEAN INPUT
         blood = blood.trim().toUpperCase();
 
-        console.log("Blood received:", blood);
-
-        // ✅ IMPORTANT: ALWAYS ENCODE BEFORE SENDING
-        const encodedBlood = encodeURIComponent(blood);
-
-        // ===== CALL GOOGLE SCRIPT =====
+        // ✅ GOOGLE SCRIPT URL
         const url =
           "https://script.google.com/macros/s/AKfycbwuG13bIWiqAxhxoT1DRfH1dYAi8JPTfdKiAPxqoY-0dTqOQnB6qum7dAnDf2MTQV6s-Q/exec?blood=" +
-          encodedBlood;
+          encodeURIComponent(blood);
 
         console.log("Calling:", url);
 
-        const response = await fetch(url, { redirect: "follow" });
-        const text = await response.text();
+        // ✅ FETCH DATA
+        const response = await fetch(url);
 
-        console.log("RAW RESPONSE:", text);
+        if (!response.ok) {
+          throw new Error("Failed to fetch data");
+        }
 
-        // ===== SAFE JSON PARSE =====
-        const data = JSON.parse(text);
+        const data = await response.json();
+
+        console.log("Response:", data);
 
         const lat = Number(data.latitude);
         const lon = Number(data.longitude);
 
-        console.log("Lat:", lat, "Lon:", lon);
-
-        // ===== VALIDATION =====
+        // ===== SUCCESS =====
         if (!isNaN(lat) && !isNaN(lon)) {
 
-          // ✅ REDIRECT TO GOOGLE MAPS
+          // ✅ REDIRECT (STABLE LINK)
           window.location.href =
-            "https://www.google.com/maps?q=" + lat + "," + lon;
+            "https://www.google.com/maps/search/?api=1&query=" +
+            lat + "," + lon;
 
         } else {
-
           document.body.innerHTML =
-            "<h3>No location found</h3><pre>" + text + "</pre>";
+            "<h3>No location found</h3><pre>" +
+            JSON.stringify(data) +
+            "</pre>";
         }
 
       } catch (error) {
@@ -63,14 +64,15 @@
         console.log("ERROR:", error);
 
         document.body.innerHTML =
-          "<h3>Error fetching location</h3><pre>" + error + "</pre>";
+          "<h3>Error fetching location</h3><pre>" +
+          error +
+          "</pre>";
       }
     }
+
+    // RUN ON LOAD
+    openMap();
   </script>
 
-</head>
-
-<body onload="openMap()">
-  <h2>Finding nearest hospital...</h2>
 </body>
 </html>
